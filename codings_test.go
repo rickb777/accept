@@ -87,7 +87,7 @@ func TestParseHappy(t *testing.T) {
 
 	for i, ex := range examples {
 
-		v, err := ParseCodings(ex.hdr)
+		v, err := Parse(ex.hdr)
 
 		if err != nil {
 			t.Errorf("Test %d: got error '%v'", i, err)
@@ -119,7 +119,7 @@ func TestSortedCodingsLike(t *testing.T) {
 	}
 
 	for i, ex := range examples {
-		cs, err := ParseCodings(ex.hdr)
+		cs, err := Parse(ex.hdr)
 		if err != nil {
 			t.Errorf("Test %d: got error '%v'", i, err)
 		}
@@ -141,7 +141,7 @@ func TestSortedCodingsLike(t *testing.T) {
 func ExampleCodings_Sorted() {
 	accept := "text/*, text/plain, text/plain;format=flowed, */*"
 
-	v, _ := ParseCodings(accept)
+	v, _ := Parse(accept)
 	sorted := v.Sorted()
 
 	fmt.Printf("%s: %s\n", Accept, accept)

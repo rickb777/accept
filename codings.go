@@ -66,7 +66,8 @@ func (c Coding) biasedWeight() float64 {
 // Codings holds a list of codings.
 type Codings []Coding
 
-// Like finds codings that have names beginning with a given prefix.
+// Like finds codings that have names beginning with a given prefix or with a "*". Codings with zero
+// weight are not accepted; the result will not contain any of these.
 func (cs Codings) Like(prefix string) Codings {
 	result := make(Codings, 0)
 	for _, v := range cs {
@@ -87,6 +88,11 @@ func (cs Codings) Get(name string) Coding {
 	return Coding{}
 }
 
+// Accepts tests whether a named coding is 'accepted'.
+func (cs Codings) Accepts(name string) bool {
+	return cs.Get(name).IsAccepted()
+}
+
 // Sorted sorts the codings by quality factor, highest first. Returns cs, which has been sorted.
 // After sorting, the first items in the list are the most preferred. Sorting also takes into
 // account "*" wildcards (these diminish the weight), and any attributes that make a coding more
@@ -102,6 +108,15 @@ func (cs Codings) Sorted() Codings {
 		return wi > wj
 	})
 	return cs
+}
+
+// Names returns the like of names from the list of codings.
+func (cs Codings) Names() []string {
+	str := make([]string, 0, len(cs))
+	for _, c := range cs {
+		str = append(str, c.Name)
+	}
+	return str
 }
 
 func (cs Codings) String() string {
