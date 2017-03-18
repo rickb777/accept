@@ -94,7 +94,7 @@ func parsePart(s string) (Coding, error) {
 	var err error
 	coding := Coding{
 		Name:   strings.ToLower(strings.TrimSpace(fields[0])),
-		Weight: 1,
+		QValue: 1,
 	}
 
 	for _, f := range fields[1:] {
@@ -112,15 +112,15 @@ func parsePart(s string) (Coding, error) {
 			p0 := strings.TrimSpace(p[0])
 			p1 := strings.TrimSpace(p[1])
 			if p0 == "q" {
-				coding.Weight, err = strconv.ParseFloat(p1, 64)
+				coding.QValue, err = strconv.ParseFloat(p1, 64)
 				if err != nil {
 					return coding, fmt.Errorf("Cannot parse q-value in '%s'; %v", s, err)
 				}
 
-				if coding.Weight < 0 {
-					coding.Weight = 0
-				} else if coding.Weight > 1 {
-					coding.Weight = 1
+				if coding.QValue < 0 {
+					coding.QValue = 0
+				} else if coding.QValue > 1 {
+					coding.QValue = 1
 				}
 			} else {
 				if coding.Attributes == nil {

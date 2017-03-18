@@ -34,6 +34,26 @@ func TestAcceptsEncoding(t *testing.T) {
 	}
 }
 
+func TestPreferredLikeEdgeCases(t *testing.T) {
+
+	examples := []struct {
+		hdr  string
+		like string
+	}{
+		{"", ""},
+		{" compress ; q = fail , gzip ", "gzip"},
+		{"compress; q=0.5 , gzip;q=0", "gzip"},
+		{"this is not valid", "gzip"},
+	}
+
+	for i, ex := range examples {
+		v := PreferredLike(ex.hdr, ex.like)
+		if v != "" {
+			t.Errorf("Test %d: got %s but wanted %s", i, v, ex.hdr)
+		}
+	}
+}
+
 func ExampleAcceptsEncoding() {
 	h := make(http.Header)
 	ae := "compress; q=0.5, gzip, *;q=0"
@@ -104,7 +124,7 @@ func ExamplePreferredLanguageLike() {
 }
 
 func ExampleParse_acceptLanguage() {
-	accept := "da, en-gb;q=0.8, en;q=0.7"
+	accept := "da, en-gb;q=0.8, en;q=0.7, pt;q=0"
 
 	// Parse the header value
 	v, _ := Parse(accept)
@@ -119,7 +139,7 @@ func ExampleParse_acceptLanguage() {
 	fmt.Printf("mostPreferred = %v\n", mostPreferred)
 	fmt.Printf("preferredEN   = %v\n", preferredEN)
 
-	// Output: Accept-Language: da, en-gb;q=0.8, en;q=0.7
+	// Output: Accept-Language: da, en-gb;q=0.8, en;q=0.7, pt;q=0
 	// mostPreferred = da
 	// preferredEN   = en-gb
 }

@@ -14,7 +14,7 @@ func TestCodingString(t *testing.T) {
 	}{
 		{Coding{"gzip", 1, nil}, "gzip"},
 		{Coding{"gzip", 0.1234, nil}, "gzip;q=0.123"},
-		{Coding{"text/plain", 0, map[string]string{"format": "flowed"}}, "text/plain;format=flowed"},
+		{Coding{"text/plain", 0, map[string]string{"format": "flowed"}}, "text/plain;format=flowed;q=0"},
 		{Coding{"text/plain", 1, nil}, "text/plain"},
 		{Coding{"text/html", 0.4, map[string]string{"level": "2"}}, "text/html;level=2;q=0.4"},
 	}
@@ -30,12 +30,13 @@ func TestCodingString(t *testing.T) {
 func TestCodingsString(t *testing.T) {
 	c := Codings{
 		Coding{"text/html", 0.4, map[string]string{"level": "2"}},
-		Coding{"gzip", 0.1234, nil},
+		Coding{"image/png", 0.1234, nil},
+		Coding{"*/*", 0, nil},
 	}
 
 	s := c.String()
 
-	exp := "text/html;level=2;q=0.4, gzip;q=0.123"
+	exp := "text/html;level=2;q=0.4, image/png;q=0.123, */*;q=0"
 	if s != exp {
 		t.Errorf("Got '%s', expected '%s'", s, exp)
 	}
@@ -83,6 +84,13 @@ func TestParseHappy(t *testing.T) {
 
 		{Codings{Coding{"text/html", 0.4, map[string]string{"level": "2"}}},
 			"text/html;Level=2;Q=0.4"},
+
+		{Codings{Coding{"text/html", 1, map[string]string{"charset": "utf-8"}}},
+			"Text/HTML;Charset=UTF-8"},
+
+		// quoted attribute values are not yet supported (and may not be required)
+		//{Codings{Coding{"text/html", 1, map[string]string{"charset": "utf-8"}}},
+		//	`Text/HTML;Charset="UTF-8"`},
 	}
 
 	for i, ex := range examples {
@@ -134,6 +142,32 @@ func TestSortedCodingsLike(t *testing.T) {
 					t.Errorf("Test %d.%d: got %v, expected %s", i, j, v, ex.preferences[j])
 				}
 			}
+		}
+	}
+}
+
+func TestCodingsIfAccepted(t *testing.T) {
+
+	examples := []struct {
+		hdr         string
+		preferences []string
+	}{
+		{"", []string{}},
+
+		{"gzip;q=1.0, identity; q=0.5, *;q=0", []string{"gzip", "identity"}},
+		{"*;q=0, gzip;q=1.0, identity; q=0", []string{"gzip"}},
+	}
+
+	for i, ex := range examples {
+		cs, err := Parse(ex.hdr)
+		if err != nil {
+			t.Errorf("Test %d: got error '%v'", i, err)
+		}
+
+		names := cs.IfAccepted().Names()
+
+		if !reflect.DeepEqual(names, ex.preferences) {
+			t.Errorf("Test %d: got '%#v', expected '%#v'", i, names, ex.preferences)
 		}
 	}
 }
